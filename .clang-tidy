@@ -1,0 +1,19 @@
+---
+Checks: "*,
+        -altera-*,
+        -llvm*,
+        -modernize-use-trailing-return-type,
+        -zircon-*,
+        -readability-else-after-return,
+        -readability-avoid-const-params-in-decls,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
+        -misc-non-private-member-variables-in-classes,
+        -misc-include-cleaner,
+        -clang-analyzer-security*,
+        -hicpp-signed-bitwise,
+        -bugprone-easily-swappable-parameters,
+        -cert-err33-c,
+"
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+FormatStyle:     none

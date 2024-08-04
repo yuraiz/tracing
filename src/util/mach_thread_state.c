@@ -46,7 +46,8 @@ void trc_thread_set_arm_debug_state64(
 }
 
 void trc_dump_arm_thread_state64(arm_thread_state64_t thread_state) {
-    for (int i = 0; i < 29; i++) {
+    const int x_register_count = 29;
+    for (int i = 0; i < x_register_count; i++) {
         printf("x%i: %" PRIu64 "\n", i, thread_state.__x[i]);
     }
 

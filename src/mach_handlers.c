@@ -8,7 +8,7 @@
 extern kern_return_t catch_mach_exception_raise(
     mach_port_t __unused exception_port,
     mach_port_t thread,
-    mach_port_t task,
+    mach_port_t __unused task,
     exception_type_t exception,
     exception_data_t __unused code,
     mach_msg_type_number_t __unused code_count

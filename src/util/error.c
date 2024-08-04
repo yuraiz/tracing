@@ -1,12 +1,14 @@
 #include "error.h"
 
 #include <mach/mach_error.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 void error(char* msg) {
     fprintf(stderr, "Error: %s\n", msg);
-    exit(1);
+    // exit() call is not thread safe, so use raise()
+    raise(SIGINT);
 }
 
 void expect_ok(kern_return_t status_code, char* failure_message) {

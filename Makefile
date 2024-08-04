@@ -11,6 +11,9 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 
 # compiler to use
 CC = clang
+CFLAGS := -Wall -Wextra -Wpedantic -Wconversion -Wdouble-promotion	\
+	-Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion \
+	-fsanitize=undefined -fsanitize-trap
 PROGRAM_NAME := tracer
 
 # All *.c files in src/ (including subdirectories)
@@ -21,7 +24,8 @@ all: target/${PROGRAM_NAME}
 
 target/%.o: src/%.c
 	@mkdir -p ${dir $@}
-	${CC} -c $< -o $@
+	@echo "Compiling $<"
+	@${CC} ${CFLAGS} -c $< -o $@
 
 target/${PROGRAM_NAME}: ${OBJECT_FILES}
 	${CC} $^ -o $@

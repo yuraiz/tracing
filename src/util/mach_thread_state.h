@@ -1,13 +1,7 @@
 #ifndef TRC_M_THREAD_STATE_UTIL_H
 #define TRC_M_THREAD_STATE_UTIL_H
 
-#include <inttypes.h>
-#include <mach/mach.h>
 #include <mach/mach_types.h>
-#include <stdio.h>
-
-#include "error_util.h"
-#include "mach_thread_state_util.h"
 
 // Get
 

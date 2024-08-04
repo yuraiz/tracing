@@ -1,10 +1,10 @@
-#include "mach_thread_state_util.h"
+#include "mach_thread_state.h"
 
 #include <inttypes.h>
 #include <mach/mach.h>
 #include <stdio.h>
 
-#include "error_util.h"
+#include "error.h"
 
 #define GET_THREAD_STATE_BODY(_type, _flavor)                       \
     _type state;                                                    \

@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "error_util.h"
-#include "mach_task_util.h"
-#include "mach_thread_util.h"
+#include "util/error.h"
+#include "util/mach_task.h"
+#include "util/mach_thread.h"
 
 extern boolean_t mach_exc_server(
     mach_msg_header_t* InHeadP, mach_msg_header_t* OutHeadP

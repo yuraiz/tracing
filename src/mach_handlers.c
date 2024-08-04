@@ -2,9 +2,8 @@
 #include <mach/mach_types.h>
 #include <stdio.h>
 
-#include "mach_exc_generated/mach_exc.h"
-#include "mach_thread_state_util.h"
-#include "mach_thread_util.h"
+#include "util/mach_thread.h"
+#include "util/mach_thread_state.h"
 
 extern kern_return_t catch_mach_exception_raise(
     mach_port_t __unused exception_port,

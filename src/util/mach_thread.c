@@ -1,4 +1,4 @@
-#include "mach_thread_util.h"
+#include "mach_thread.h"
 
 #include <inttypes.h>
 #include <mach/exc.h>
@@ -19,8 +19,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "error_util.h"
-#include "mach_thread_state_util.h"
+#include "error.h"
+#include "mach_thread_state.h"
 
 void trc_thread_enable_single_step(thread_act_t thread) {
     arm_debug_state64_t debug_state = trc_thread_get_arm_debug_state64(thread);

@@ -1,7 +1,7 @@
 #include <mach/exc.h>
 #include <mach/mach.h>
 
-#include "error_util.h"
+#include "error.h"
 
 // Function to set up an exception handler
 void trc_setup_exception_handler(task_t task, mach_port_t* exc_port) {

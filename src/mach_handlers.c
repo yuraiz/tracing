@@ -1,0 +1,67 @@
+#include <mach/mach.h>
+#include <mach/mach_types.h>
+#include <stdio.h>
+
+#include "mach_exc_generated/mach_exc.h"
+#include "mach_thread_state_util.h"
+#include "mach_thread_util.h"
+
+extern kern_return_t catch_mach_exception_raise(
+    mach_port_t __unused exception_port,
+    mach_port_t thread,
+    mach_port_t task,
+    exception_type_t exception,
+    exception_data_t __unused code,
+    mach_msg_type_number_t __unused code_count
+) {
+    if (exception == EXC_BREAKPOINT) {
+        printf("breakpoint\n");
+
+        trc_thread_enable_single_step(thread);
+
+        arm_thread_state64_t thread_state =
+            trc_thread_get_arm_thread_state64(thread);
+
+        trc_dump_arm_thread_state64(thread_state);
+
+        return KERN_SUCCESS;
+    } else {
+        printf("unknown exception\n");
+    }
+
+    return KERN_FAILURE;
+}
+
+// Unused handles
+
+extern kern_return_t catch_mach_exception_raise_state(
+    mach_port_t __unused exception_port,
+    exception_type_t __unused exception,
+    exception_data_t __unused code,
+    mach_msg_type_number_t __unused code_count,
+    int* __unused flavor,
+    thread_state_t __unused in_state,
+    mach_msg_type_number_t __unused in_state_count,
+    thread_state_t __unused out_state,
+    mach_msg_type_number_t* __unused out_state_count
+) {
+    fprintf(stderr, "this handler should not be called");
+    return MACH_RCV_INVALID_TYPE;
+}
+
+extern kern_return_t catch_mach_exception_raise_state_identity(
+    mach_port_t __unused exception_port,
+    mach_port_t __unused thread,
+    mach_port_t __unused task,
+    exception_type_t __unused exception,
+    exception_data_t __unused code,
+    mach_msg_type_number_t __unused code_count,
+    int* __unused flavor,
+    thread_state_t __unused in_state,
+    mach_msg_type_number_t __unused in_state_count,
+    thread_state_t __unused out_state,
+    mach_msg_type_number_t* __unused out_state_count
+) {
+    fprintf(stderr, "this handler should not be called");
+    return MACH_RCV_INVALID_TYPE;
+}

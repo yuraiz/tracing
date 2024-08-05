@@ -13,6 +13,9 @@ Checks: "*,
         -hicpp-signed-bitwise,
         -bugprone-easily-swappable-parameters,
         -cert-err33-c,
+        -readability-identifier-length,
+        -bugprone-suspicious-realloc-usage, # I want to fix that later,
+        -cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers, # I just like magic numbers sometimes
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

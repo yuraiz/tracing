@@ -11,9 +11,12 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 
 # compiler to use
 CC = clang
-CFLAGS := -Wall -Wextra -Wpedantic -Wconversion -Wdouble-promotion	\
+CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wdouble-promotion	\
 	-Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion \
-	-fsanitize=undefined -fsanitize-trap
+	-g -fsanitize=undefined -fsanitize-trap -fsanitize=address			
+
+LINKFLAGS := -std=c11 -g -F /System/Library/PrivateFrameworks -framework CoreSymbolication -fsanitize=address
+
 PROGRAM_NAME := tracer
 
 # All *.c files in src/ (including subdirectories)
@@ -28,7 +31,7 @@ target/%.o: src/%.c
 	@${CC} ${CFLAGS} -c $< -o $@
 
 target/${PROGRAM_NAME}: ${OBJECT_FILES}
-	${CC} $^ -o $@
+	${CC} ${LINKFLAGS} $^ -o $@
 
 clean:
 	rm -rf target/

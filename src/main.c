@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "breakpoint/breakpoint_controller.h"
+#include "globals.h"
+#include "symbolication/symbolicator.h"
 #include "util/error.h"
 #include "util/mach_task.h"
 #include "util/mach_thread.h"
@@ -31,6 +34,31 @@ int main(int argc, char** argv) {
     task_t task = 0;
     expect_ok(task_for_pid(mach_task_self(), pid, &task), "failed to get port");
 
+    symbolicator_t symbolicator = trc_symbolicator_new_with_task(task);
+
+    const char* symbol_name =
+        "_$LT$T$u20$as$u20$wgpu..context..DynContext$GT$::queue_submit::"
+        "h495960884c2aca72";
+
+    trc_address_opt_t address_opt = trc_symbolicator_find_symbol(
+        symbolicator, symbol_name, "wgpu-examples", false, 0, true
+    );
+
+    expect_true(address_opt.is_present, "failed to get address");
+
+    printf(
+        "symbol: %s",
+        trc_symbolicator_symbol_at_address(
+            symbolicator, address_opt.address, NULL
+        )
+    );
+
+    BREAKPOINT_CONTROLLER = trc_breakpoint_controller_with_task_alloc(task);
+
+    trc_breakpoint_controller_set_breakpoint(
+        BREAKPOINT_CONTROLLER, address_opt.address
+    );
+
     mach_port_t exc_port = 0;
     trc_setup_exception_handler(task, &exc_port);
 
@@ -42,7 +70,9 @@ int main(int argc, char** argv) {
 
     expect_true(threads_len > 0, "child process has no threads");
 
-    trc_thread_enable_single_step(threads[0]);
+    trc_thread_enable_watch_point(threads[0]);
+
+    // trc_thread_enable_single_step(threads[0]);
 
     expect_ok(task_resume(task), "failed to resume");
 
@@ -50,13 +80,13 @@ int main(int argc, char** argv) {
 
     const mach_msg_size_t msg_size = 2048;
     expect_ok(
-        mach_msg_server_once(
+        mach_msg_server(
             mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
         ),
         "mach_msg_server() returned on error!"
     );
 
-    trc_thread_disable_single_step(threads[0]);
+    // trc_thread_disable_single_step(threads[0]);
 
-    printf("Hello, world, pid = %i\n", pid);
+    // printf("Hello, world, pid = %i\n", pid);
 }

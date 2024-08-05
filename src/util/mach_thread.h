@@ -3,6 +3,10 @@
 
 #include <mach/mach_types.h>
 
+void trc_thread_enable_watch_point(thread_act_t thread);
+
+void trc_thread_disable_watch_point(thread_act_t thread);
+
 void trc_thread_enable_single_step(thread_act_t thread);
 
 void trc_thread_disable_single_step(thread_act_t thread);

@@ -2,6 +2,8 @@
 #include <mach/mach_types.h>
 #include <stdio.h>
 
+#include "breakpoint/breakpoint_controller.h"
+#include "globals.h"
 #include "util/mach_thread.h"
 #include "util/mach_thread_state.h"
 

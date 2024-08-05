@@ -1,4 +1,5 @@
 #include <mach/exc.h>
+#include <mach/exception_types.h>
 #include <mach/mach.h>
 
 #include "error.h"

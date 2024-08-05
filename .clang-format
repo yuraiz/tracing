@@ -8,3 +8,4 @@ BinPackParameters: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: false
 InsertNewlineAtEOF: true
+ObjCBlockIndentWidth: 4

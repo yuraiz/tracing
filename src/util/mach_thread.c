@@ -22,6 +22,22 @@
 #include "error.h"
 #include "mach_thread_state.h"
 
+void trc_thread_enable_watch_point(thread_act_t thread) {
+    arm_debug_state64_t debug_state = trc_thread_get_arm_debug_state64(thread);
+
+    debug_state.__wcr[0] |= ((uint32_t)1u);
+
+    trc_thread_set_arm_debug_state64(thread, &debug_state);
+}
+
+void trc_thread_disable_watch_point(thread_act_t thread) {
+    arm_debug_state64_t debug_state = trc_thread_get_arm_debug_state64(thread);
+
+    debug_state.__wcr[0] &= ~((uint32_t)1u);
+
+    trc_thread_set_arm_debug_state64(thread, &debug_state);
+}
+
 void trc_thread_enable_single_step(thread_act_t thread) {
     arm_debug_state64_t debug_state = trc_thread_get_arm_debug_state64(thread);
 

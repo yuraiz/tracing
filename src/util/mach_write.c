@@ -1,0 +1,107 @@
+#include "mach_write.h"
+
+#include <mach/mach_types.h>
+#include <mach/mach_vm.h>
+#include <mach/task.h>
+#include <mach/vm_prot.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "error.h"
+
+void trc_mach_write_to_protected(
+    task_t task,
+    mach_vm_address_t address,
+    const void* data,
+    size_t size,
+    bool revert_back
+) {
+    mach_port_t object_name = MACH_PORT_NULL;
+    mach_msg_type_number_t region_info_size = VM_REGION_BASIC_INFO_COUNT_64;
+    mach_vm_size_t vm_size = (mach_vm_size_t)size;
+
+    vm_region_basic_info_64_t region_info = malloc(region_info_size);
+
+    printf(
+        "VALUES: %i %p %p %i %p %p %p \n",
+        task,
+        &address,
+        &vm_size,
+        VM_REGION_BASIC_INFO_64,
+        (vm_region_info_t)region_info,
+        &region_info_size,
+        &object_name
+    );
+
+    expect_ok(
+        mach_vm_region(
+            task,
+            &address,
+            &vm_size,
+            VM_REGION_BASIC_INFO_64,
+            (vm_region_info_t)region_info,
+            &region_info_size,
+            &object_name
+        ),
+        "failed to get region info"
+    );
+
+    const vm_prot_t old_protection = region_info->protection;
+
+    free(region_info);
+
+    bool needs_to_change_protection =
+        ((old_protection & VM_PROT_WRITE) == 0 ||
+         (old_protection & VM_PROT_EXECUTE) != 0);
+
+    bool executable_protection_modified = false;
+    if (needs_to_change_protection) {
+        vm_prot_t new_protection = 0;
+
+        if ((old_protection & VM_PROT_EXECUTE) != 0) {
+            new_protection =
+                (old_protection & ~VM_PROT_EXECUTE) | VM_PROT_WRITE;
+            executable_protection_modified = true;
+
+            task_suspend(task);
+        } else {
+            new_protection = (old_protection | VM_PROT_WRITE);
+        }
+
+        expect_ok(
+            mach_vm_protect(
+                task,
+                address,
+                size,
+                false,
+                VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY
+            ),
+            "failed to disable write protection"
+        );
+
+        // expect_ok(
+        //     mach_vm_protect(task, address, size, false, new_protection),
+        //     "failed to disable write protection"
+        // );
+    }
+
+    expect_ok(
+        mach_vm_write(
+            task, address, (vm_offset_t)data, (mach_msg_type_number_t)size
+        ),
+        "failed to write data"
+    );
+
+    // Re-protect the region back to the way it was
+    if ((revert_back || executable_protection_modified) &&
+        needs_to_change_protection) {
+        expect_ok(
+            mach_vm_protect(task, address, size, false, old_protection),
+            "failed to enable protection back"
+        );
+
+        if (executable_protection_modified) {
+            task_resume(task);
+        }
+    }
+}

@@ -1,7 +1,11 @@
+#include <mach/arm/kern_return.h>
 #include <mach/exc.h>
 #include <mach/mach.h>
+#include <mach/message.h>
+#include <mach/task.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/_types/_null.h>
 
 #include "breakpoint/breakpoint_controller.h"
 #include "globals.h"
@@ -17,6 +21,8 @@ extern boolean_t mach_exc_server(
 );
 
 int main(int argc, char** argv) {
+    kern_return_t status_code;
+
     if (argc != 2) {
         error("Usage [progam] [pid]");
     }
@@ -32,22 +38,26 @@ int main(int argc, char** argv) {
     pid_t pid = (pid_t)pid_in;
 
     task_t task = 0;
-    expect_ok(task_for_pid(mach_task_self(), pid, &task), "failed to get port");
+    status_code = task_for_pid(mach_task_self(), pid, &task);
+    expect_ok(status_code, "failed to get port");
 
     symbolicator_t symbolicator = trc_symbolicator_new_with_task(task);
 
-    const char* symbol_name =
-        "_$LT$T$u20$as$u20$wgpu..context..DynContext$GT$::queue_submit::"
-        "h495960884c2aca72";
+    // const char* symbol_name =
+    //     "_$LT$T$u20$as$u20$wgpu..context..DynContext$GT$::queue_submit::"
+    //     "h495960884c2aca72";
+
+    // trc_symbolicator_find_symbols_with_name(symbolicator, "", "", false,
+    // size_t *symbol_count)
 
     trc_address_opt_t address_opt = trc_symbolicator_find_symbol(
-        symbolicator, symbol_name, "wgpu-examples", false, 0, true
+        symbolicator, "my_println", "simple_app", true, 0, true
     );
 
     expect_true(address_opt.is_present, "failed to get address");
 
     printf(
-        "symbol: %s",
+        "symbol: %s\n",
         trc_symbolicator_symbol_at_address(
             symbolicator, address_opt.address, NULL
         )
@@ -62,7 +72,8 @@ int main(int argc, char** argv) {
     mach_port_t exc_port = 0;
     trc_setup_exception_handler(task, &exc_port);
 
-    expect_ok(task_suspend(task), "failed to suspend");
+    status_code = task_suspend(task);
+    expect_ok(status_code, "failed to suspend");
 
     thread_act_array_t threads = NULL;
     mach_msg_type_number_t threads_len = 0;
@@ -74,19 +85,24 @@ int main(int argc, char** argv) {
 
     // trc_thread_enable_single_step(threads[0]);
 
-    expect_ok(task_resume(task), "failed to resume");
+    status_code = task_resume(task);
+    expect_ok(status_code, "failed to resume");
 
     printf("starting loop\n");
 
     const mach_msg_size_t msg_size = 2048;
-    expect_ok(
-        mach_msg_server(
-            mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
-        ),
-        "mach_msg_server() returned on error!"
+
+    status_code = mach_msg_server_once(
+        mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
     );
+    // status_code = mach_msg_server(
+    //     mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
+    // );
+    expect_ok(status_code, "mach_msg_server() returned on error!");
 
     // trc_thread_disable_single_step(threads[0]);
 
     // printf("Hello, world, pid = %i\n", pid);
+
+    printf("finished execution");
 }

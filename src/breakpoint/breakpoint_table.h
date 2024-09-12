@@ -10,11 +10,11 @@
 
 typedef struct {
     // TODO(yuraiz): 4 bytes on ARM64, 1 byte on x84_64
-    int8_t data[4];
+    uint8_t data[4];
 } breakpoint_table_value_t;
 
 typedef struct {
-    vm_address_t* addresss;
+    mach_vm_address_t* addresss;
     breakpoint_table_value_t* values;
     size_t len;
     size_t capacity;
@@ -35,21 +35,21 @@ static inline breakpoint_table_t* trc_breakpoint_table_new_alloc(void) {
 }
 
 bool trc_breakpoint_table_contains(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 );
 
 void trc_breakpoint_table_set(
     breakpoint_table_t* table,
-    vm_address_t address,
+    mach_vm_address_t address,
     breakpoint_table_value_t value
 );
 
 breakpoint_table_value_t trc_breakpoint_table_get(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 );
 
 breakpoint_table_value_t trc_breakpoint_table_remove(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 );
 
 void trc_breakpoint_table_dump(breakpoint_table_t* table);

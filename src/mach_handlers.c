@@ -1,9 +1,12 @@
+#include <mach/arm/vm_types.h>
 #include <mach/mach.h>
 #include <mach/mach_types.h>
+#include <mach/mach_vm.h>
 #include <stdio.h>
 
 #include "breakpoint/breakpoint_controller.h"
 #include "globals.h"
+#include "util/error.h"
 #include "util/mach_thread.h"
 #include "util/mach_thread_state.h"
 
@@ -18,12 +21,25 @@ extern kern_return_t catch_mach_exception_raise(
     if (exception == EXC_BREAKPOINT) {
         printf("breakpoint\n");
 
-        trc_thread_enable_single_step(thread);
+        // trc_thread_enable_single_step(thread);
 
-        arm_thread_state64_t thread_state =
+        const arm_thread_state64_t thread_state =
             trc_thread_get_arm_thread_state64(thread);
 
         trc_dump_arm_thread_state64(thread_state);
+
+        trc_breakpoint_controller_disable_breakpoint(
+            BREAKPOINT_CONTROLLER, thread_state.__pc
+        );
+
+        char* data = malloc(256);
+        mach_vm_size_t outsize = 0;
+
+        mach_vm_read_overwrite(
+            task, thread_state.__x[0], 256, (mach_vm_offset_t)data, &outsize
+        );
+
+        printf("Argument of the call to my_println is: %s \n", data);
 
         return KERN_SUCCESS;
     } else {

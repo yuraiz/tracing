@@ -19,7 +19,7 @@
 // } breakpoint_table_value_t;
 
 // struct breakpoint_table {
-//     vm_address_t* addresss;
+//     mach_vm_address_t* addresss;
 //     breakpoint_table_value_t* values;
 // };
 
@@ -29,7 +29,7 @@ typedef struct {
 } pos_result_t;
 
 static pos_result_t breakpoint_table_address_position(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 ) {
     pos_result_t result = {
         .exists = false,
@@ -38,7 +38,7 @@ static pos_result_t breakpoint_table_address_position(
 
     // TODO(yuraiz): Use binary search
     for (; result.position < table->len; result.position++) {
-        vm_address_t value = table->addresss[result.position];
+        mach_vm_address_t value = table->addresss[result.position];
         if (value == address) {
             result.exists = true;
             break;
@@ -61,7 +61,7 @@ static void breakpoint_table_reserve(
     table->capacity = new_capacity;
 
     table->addresss =
-        realloc(table->addresss, sizeof(vm_address_t) * new_capacity);
+        realloc(table->addresss, sizeof(mach_vm_address_t) * new_capacity);
 
     table->values =
         realloc(table->values, sizeof(breakpoint_table_value_t) * new_capacity);
@@ -90,9 +90,9 @@ static void breakpoint_table_add_new_position(
 
         const size_t element_count = table->len - pos;
 
-        vm_address_t* start_adr = table->addresss + pos;
-        vm_address_t* dst_adr = start_adr + 1;
-        size_t size_adr = sizeof(vm_address_t) * element_count;
+        mach_vm_address_t* start_adr = table->addresss + pos;
+        mach_vm_address_t* dst_adr = start_adr + 1;
+        size_t size_adr = sizeof(mach_vm_address_t) * element_count;
         memmove(dst_adr, start_adr, size_adr);
 
         breakpoint_table_value_t* start_val = table->values + pos;
@@ -115,9 +115,9 @@ static void breakpoint_table_remove_position(
         // Required to move elements
         const size_t element_count = table->len - pos;
 
-        vm_address_t* start_adr = table->addresss + pos + 1;
-        vm_address_t* dst_adr = start_adr - 1;
-        size_t size_adr = sizeof(vm_address_t) * element_count;
+        mach_vm_address_t* start_adr = table->addresss + pos + 1;
+        mach_vm_address_t* dst_adr = start_adr - 1;
+        size_t size_adr = sizeof(mach_vm_address_t) * element_count;
         memmove(dst_adr, start_adr, size_adr);
 
         breakpoint_table_value_t* start_val = table->values + pos + 1;
@@ -128,14 +128,14 @@ static void breakpoint_table_remove_position(
 }
 
 bool trc_breakpoint_table_contains(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 ) {
     return breakpoint_table_address_position(table, address).exists;
 }
 
 void trc_breakpoint_table_set(
     breakpoint_table_t* table,
-    vm_address_t address,
+    mach_vm_address_t address,
     breakpoint_table_value_t value
 ) {
     pos_result_t res = breakpoint_table_address_position(table, address);
@@ -149,7 +149,7 @@ void trc_breakpoint_table_set(
 }
 
 breakpoint_table_value_t trc_breakpoint_table_get(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 ) {
     pos_result_t res = breakpoint_table_address_position(table, address);
     if (res.exists) {
@@ -161,7 +161,7 @@ breakpoint_table_value_t trc_breakpoint_table_get(
 }
 
 breakpoint_table_value_t trc_breakpoint_table_remove(
-    breakpoint_table_t* table, vm_address_t address
+    breakpoint_table_t* table, mach_vm_address_t address
 ) {
     pos_result_t res = breakpoint_table_address_position(table, address);
 
@@ -178,7 +178,7 @@ breakpoint_table_value_t trc_breakpoint_table_remove(
 void trc_breakpoint_table_dump(breakpoint_table_t* table) {
     printf("breakpoint table 0x%" PRIXPTR "\n", (uintptr_t)table);
     for (size_t i = 0; i < table->len; i++) {
-        vm_address_t address = table->addresss[i];
+        mach_vm_address_t address = table->addresss[i];
         breakpoint_table_value_t value = table->values[i];
         printf("    address: 0x%" PRIXPTR "\n", address);
         printf("    value: ");

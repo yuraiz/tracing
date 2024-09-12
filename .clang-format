@@ -9,3 +9,4 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: false
 InsertNewlineAtEOF: true
 ObjCBlockIndentWidth: 4
+ReflowComments: false

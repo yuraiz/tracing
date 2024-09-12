@@ -30,15 +30,15 @@ trc_breakpoint_controller_with_task_alloc(task_t task) {
 }
 
 void trc_breakpoint_controller_set_breakpoint(
-    breakpoint_controller_t* controller, vm_address_t address
+    breakpoint_controller_t* controller, mach_vm_address_t address
 );
 
 void trc_breakpoint_controller_disable_breakpoint(
-    breakpoint_controller_t* controller, vm_address_t address
+    breakpoint_controller_t* controller, mach_vm_address_t address
 );
 
 void trc_breakpoint_controller_remove_breakpoint(
-    breakpoint_controller_t* controller, vm_address_t address
+    breakpoint_controller_t* controller, mach_vm_address_t address
 );
 
 #endif  // TRC_BREAKPOINT_CONTROLLER

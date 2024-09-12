@@ -14,8 +14,8 @@ symbolicator_t trc_symbolicator_new_with_task(task_t task) {
 
 const char* trc_symbolicator_symbol_at_address(
     symbolicator_t symbolicator,
-    vm_address_t address,
-    vm_address_t* relative_offset
+    mach_vm_address_t address,
+    mach_vm_address_t* relative_offset
 ) {
     const char* result = NULL;
     if (!CSIsNull(symbolicator)) {
@@ -143,7 +143,7 @@ trc_address_opt_t trc_symbolicator_find_symbol(
     const char* symbol_name,
     const char* partial_symbol_owner_name,
     bool exact_match,
-    vm_address_t past_address,
+    mach_vm_address_t past_address,
     bool allow_wrappint_to_beginning
 ) {
     trc_address_opt_t result = {.is_present = false, .address = 0};

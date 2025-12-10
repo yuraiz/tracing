@@ -26,6 +26,7 @@ extern boolean_t mach_exc_server(
 
 typedef enum {
     CMD_TY_BREAKPOINT,
+    CMD_TY_DISABLE,
     CMD_TY_START,
     CMD_TY_EVAL_EXPR,
     CMD_TY_INVALID,
@@ -79,6 +80,21 @@ parse_cmd_tag_res_t parse_cmd_tag(string_t string) {
         return result;
     }
 
+    const char* disable_pref[] = {
+        "d ",
+        "disable ",
+    };
+
+    value = check_prefixes(
+        string, disable_pref, sizeof(disable_pref) / sizeof(*disable_pref)
+    );
+
+    if (value.ptr != string.ptr) {
+        result.tag = CMD_TY_DISABLE;
+        result.rest = value;
+        return result;
+    }
+
     const char* start_pref[] = {
         "s",
         "start",
@@ -122,7 +138,7 @@ cmd_t parse_command(__unused arena_t* arena, string_t string) {
 
     if (cmd.tag == CMD_TY_START) {
         cmd.value.invalid = NULL;
-    } else if (cmd.tag == CMD_TY_BREAKPOINT) {
+    } else if (cmd.tag == CMD_TY_BREAKPOINT || cmd.tag == CMD_TY_DISABLE) {
         cmd.value.breakpoint = string;
     } else if (cmd.tag == CMD_TY_EVAL_EXPR) {
         cmd.value.invalid = "not implemented yet";
@@ -158,7 +174,7 @@ static void cmd_resume(app_state_t* app_state) {
 }
 
 void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
-    if (cmd.tag == CMD_TY_BREAKPOINT) {
+    if (cmd.tag == CMD_TY_BREAKPOINT || cmd.tag == CMD_TY_DISABLE) {
         const trc_address_opt_t address_opt = trc_symbolicator_find_symbol(
             app_state->symbolicator,
             cmd.value.breakpoint,
@@ -169,14 +185,23 @@ void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
         );
 
         if (address_opt.is_present) {
-            // task_suspend(app_state->task);
-            trc_breakpoint_controller_set_breakpoint(
-                &app_state->breakpoint_controller, address_opt.address
-            );
-            printf(
-                "breakpoint %s was set\n",
-                string_to_cstr(arena, cmd.value.breakpoint)
-            );
+            if (cmd.tag == CMD_TY_BREAKPOINT) {
+                trc_breakpoint_controller_set_breakpoint(
+                    &app_state->breakpoint_controller, address_opt.address
+                );
+                printf(
+                    "breakpoint %s was set\n",
+                    string_to_cstr(arena, cmd.value.breakpoint)
+                );
+            } else {
+                trc_breakpoint_controller_disable_breakpoint(
+                    &app_state->breakpoint_controller, address_opt.address
+                );
+                printf(
+                    "breakpoint %s was disabled\n",
+                    string_to_cstr(arena, cmd.value.breakpoint)
+                );
+            }
         } else {
             printf(
                 "breakpoint %s wasn't found\n",

@@ -98,5 +98,5 @@ int main(int argc, char** argv) {
 
     init_app_state(app_state);
 
-    start_repl();
+    start_repl(threads[0]);
 }

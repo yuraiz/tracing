@@ -16,6 +16,7 @@
 #include "alloc/arena.h"
 #include "app_state.h"
 #include "breakpoint/breakpoint_controller.h"
+#include "eval/eval.h"
 #include "string/string.h"
 #include "symbolication/symbolicator.h"
 #include "util/error.h"
@@ -29,6 +30,7 @@ typedef enum {
     CMD_TY_DISABLE,
     CMD_TY_START,
     CMD_TY_EVAL_EXPR,
+    CMD_TY_STRING,
     CMD_TY_INVALID,
 } cmd_tag_t;
 
@@ -36,7 +38,7 @@ typedef struct {
     cmd_tag_t tag;
     union {
         string_t breakpoint;
-        void* cmd_ty_eval_expr;
+        string_t expr;
         char* invalid;
     } value;
 } cmd_t;
@@ -95,6 +97,20 @@ parse_cmd_tag_res_t parse_cmd_tag(string_t string) {
         return result;
     }
 
+    const char* string_pref[] = {
+        "str ",
+        "string ",
+    };
+
+    value = check_prefixes(
+        string, string_pref, sizeof(string_pref) / sizeof(*string_pref)
+    );
+    if (value.ptr != string.ptr) {
+        result.tag = CMD_TY_STRING;
+        result.rest = value;
+        return result;
+    }
+
     const char* start_pref[] = {
         "s",
         "start",
@@ -103,6 +119,7 @@ parse_cmd_tag_res_t parse_cmd_tag(string_t string) {
     value = check_prefixes(
         string, start_pref, sizeof(start_pref) / sizeof(*start_pref)
     );
+
     if (value.ptr != string.ptr) {
         result.tag = CMD_TY_START;
         result.rest = value;
@@ -140,16 +157,14 @@ cmd_t parse_command(__unused arena_t* arena, string_t string) {
         cmd.value.invalid = NULL;
     } else if (cmd.tag == CMD_TY_BREAKPOINT || cmd.tag == CMD_TY_DISABLE) {
         cmd.value.breakpoint = string;
-    } else if (cmd.tag == CMD_TY_EVAL_EXPR) {
-        cmd.value.invalid = "not implemented yet";
+    } else if (cmd.tag == CMD_TY_EVAL_EXPR || cmd.tag == CMD_TY_STRING) {
+        cmd.value.expr = string;
     }
 
     return cmd;
 }
 
 static void cmd_resume(app_state_t* app_state) {
-    printf("cmd_resume\n");
-
     kern_return_t status_code = 0;
 
     task_t task = app_state->task;
@@ -158,7 +173,7 @@ static void cmd_resume(app_state_t* app_state) {
     status_code = task_resume(task);
     expect_ok(status_code, "failed to resume");
 
-    printf("starting loop\n");
+    printf("resumed the task\n");
 
     const mach_msg_size_t msg_size = 2048;
 
@@ -173,7 +188,9 @@ static void cmd_resume(app_state_t* app_state) {
     trc_breakpoint_controller_after_hit(&app_state->breakpoint_controller);
 }
 
-void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
+void exec_cmd(
+    arena_t* arena, cmd_t cmd, app_state_t* app_state, thread_t thread
+) {
     if (cmd.tag == CMD_TY_BREAKPOINT || cmd.tag == CMD_TY_DISABLE) {
         const trc_address_opt_t address_opt = trc_symbolicator_find_symbol(
             app_state->symbolicator,
@@ -208,12 +225,16 @@ void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
                 string_to_cstr(arena, cmd.value.breakpoint)
             );
         }
+    } else if (cmd.tag == CMD_TY_EVAL_EXPR) {
+        eval(arena, cmd.value.expr, app_state, thread);
+    } else if (cmd.tag == CMD_TY_STRING) {
+        eval_str(arena, cmd.value.expr, app_state, thread);
     } else if (cmd.tag == CMD_TY_START) {
         cmd_resume(app_state);
     }
 }
 
-void start_repl_bp(thread_t __unused thread) {
+void start_repl_bp(thread_t thread) {
     using_history();
 
     while (1) {
@@ -231,7 +252,7 @@ void start_repl_bp(thread_t __unused thread) {
         } else {
             add_history(input);
 
-            exec_cmd(arena, cmd, get_app_state());
+            exec_cmd(arena, cmd, get_app_state(), thread);
         }
 
         // Free buffer that was allocated by readline
@@ -240,8 +261,8 @@ void start_repl_bp(thread_t __unused thread) {
     }
 }
 
-void start_repl(void) {
-    start_repl_bp(MACH_PORT_NULL);
+void start_repl(thread_t thread_id) {
+    start_repl_bp(thread_id);
     while (1) {
         cmd_resume(get_app_state());
     }

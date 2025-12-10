@@ -22,7 +22,7 @@
 #include "debug_helpers.h"
 #include "error.h"
 
-const char* BOOL_TO_STR[] = {[false] = "false", [true] = "true"};
+const char* const BOOL_TO_STR[] = {[false] = "false", [true] = "true"};
 
 static void print_vm_prot(vm_prot_t protection) {
     char buf[4] = {0};
@@ -49,7 +49,7 @@ static void print_vm_prot(vm_prot_t protection) {
 }
 
 static void print_vm_inherit(vm_inherit_t inherit) {
-    const char* res;
+    const char* res = 0;
     if (inherit == VM_INHERIT_SHARE) {
         res = "SHARE";
     } else if (inherit == VM_INHERIT_COPY) {
@@ -64,16 +64,6 @@ static void print_vm_inherit(vm_inherit_t inherit) {
     }
     puts(res);
 }
-
-// #define VM_INHERIT_SHARE ((vm_inherit_t)0)       /* share with child */
-// #define VM_INHERIT_COPY ((vm_inherit_t)1)        /* copy into child */
-// #define VM_INHERIT_NONE ((vm_inherit_t)2)        /* absent from child */
-// #define VM_INHERIT_DONATE_COPY ((vm_inherit_t)3) /* copy and delete */
-
-// #define VM_INHERIT_DEFAULT VM_INHERIT_COPY
-// #define VM_INHERIT_LAST_VALID VM_INHERIT_NONE
-
-// #endif /* _MACH_VM_INHERIT_H_ */
 
 static void print_region_info(vm_region_basic_info_64_t region_info) {
     printf("Region Info:\n");
@@ -129,22 +119,8 @@ void trc_mach_write_to_protected(
 ) {
     mach_port_t object_name = MACH_PORT_NULL;
     mach_msg_type_number_t region_info_size = VM_REGION_BASIC_INFO_COUNT_64;
-    mach_vm_size_t vm_size = (mach_vm_size_t)size;
 
     vm_region_basic_info_64_t region_info = alloca(sizeof(*region_info));
-
-    // printf(
-    //     "VALUES: %i %p %p %i %p %u %u \n",
-    //     task,
-    //     address,
-    //     vm_size,
-    //     VM_REGION_BASIC_INFO_64,
-    //     (vm_region_info_t)region_info,
-    //     region_info_size,
-    //     object_name
-    // );
-
-    printf("passed address2: %p\n", (void*)address);
 
     mach_vm_address_t region_address = address;
     mach_vm_size_t region_size = (mach_vm_size_t)size;
@@ -162,13 +138,7 @@ void trc_mach_write_to_protected(
         "failed to get region info"
     );
 
-    printf("passed address3: %p\n", (void*)address);
-
     const vm_prot_t old_protection = region_info->protection;
-
-    printf("region_info_size = %u\n", region_info_size);
-
-    print_region_info(region_info);
 
     bool needs_to_change_protection =
         ((old_protection & VM_PROT_WRITE) == 0 ||
@@ -188,21 +158,6 @@ void trc_mach_write_to_protected(
             new_protection = (old_protection | VM_PROT_WRITE);
         }
 
-        // expect_ok(
-        //     mach_vm_protect(
-        //         task,
-        //         address,
-        //         size,
-        //         false,
-        //         // VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY
-        //         VM_PROT_READ | VM_PROT_WRITE | VM_PROT_COPY
-        //     ),
-        //     "failed to disable write protection"
-        // );
-
-        // printf("Planned new protection");
-        // print_vm_prot(new_protection);
-
         expect_ok(
             mach_vm_protect(
                 task,
@@ -213,17 +168,7 @@ void trc_mach_write_to_protected(
             ),
             "failed to disable write protection"
         );
-
-        printf("Updated protection\n");
-        debug_task_protection(task, region_address, vm_size);
     }
-
-    printf("DATA BEFORE WRITE:\n");
-    debug_task_mem(task, address, size * 16);
-
-    printf("DATA TO WRITE:\n");
-    print_as_hex((uint8_t*)data, size);
-    printf("\n");
 
     expect_ok(
         mach_vm_write(
@@ -231,9 +176,6 @@ void trc_mach_write_to_protected(
         ),
         "failed to write data"
     );
-
-    printf("DATA AFTER WRITE:\n");
-    debug_task_mem(task, address, size * 16);
 
     mach_vm_size_t out_size = 0;
     mach_vm_read_overwrite(
@@ -253,9 +195,6 @@ void trc_mach_write_to_protected(
             ),
             "failed to enable protection back"
         );
-
-        printf("Reverted protection back\n");
-        debug_task_protection(task, address, vm_size);
 
         if (executable_protection_modified) {
             task_resume(task);

@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include "../util/debug_helpers.h"
-#include "../util/error.h"
 #include "../util/mach_write.h"
 #include "breakpoint_table.h"
 
@@ -34,28 +33,12 @@ static breakpoint_table_value_t read_value(
         task, address, requested_size, (mach_vm_offset_t)value.data, &outsize
     );
 
-    printf("DEBUG btable read:\n");
-    debug_task_mem(task, address, 4 * 16);
-
-    // expect_ok(
-    //     mach_vm_read_overwrite(
-    //         task,
-    //         address,
-    //         requested_size,
-    //         (mach_vm_address_t)value.data,
-    //         &out_size
-
-    //     ),
-    //     "failed to read instruction"
-    // );
-
     return value;
 }
 
 static void write_value(
     task_t task, mach_vm_address_t address, breakpoint_table_value_t value
 ) {
-    printf("passed address: %p\n", (void*)address);
     trc_mach_write_to_protected(
         task, address, value.data, sizeof(value.data), true
     );
@@ -64,37 +47,10 @@ static void write_value(
 void trc_breakpoint_controller_set_breakpoint(
     breakpoint_controller_t* controller, mach_vm_address_t address
 ) {
-    printf("wanted address: %p\n", (void*)address);
-
     breakpoint_table_value_t value = read_value(controller->task, address);
-    printf(
-        "btable read: %02x%02x%02x%02x\n",
-        value.data[0],
-        value.data[1],
-        value.data[2],
-        value.data[3]
-    );
 
     trc_breakpoint_table_set(&controller->table, address, value);
     write_value(controller->task, address, BREAKPOINT_OPCODE);
-
-    breakpoint_table_value_t value2 = read_value(controller->task, address);
-    printf(
-        "btable read2: %02x%02x%02x%02x\n",
-        value2.data[0],
-        value2.data[1],
-        value2.data[2],
-        value2.data[3]
-    );
-
-    breakpoint_table_value_t bp_opcode = BREAKPOINT_OPCODE;
-    printf(
-        "btable bp_opcode: %02x%02x%02x%02x\n",
-        bp_opcode.data[0],
-        bp_opcode.data[1],
-        bp_opcode.data[2],
-        bp_opcode.data[3]
-    );
 }
 
 void trc_breakpoint_controller_disable_breakpoint(

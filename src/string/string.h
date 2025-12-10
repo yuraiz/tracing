@@ -125,21 +125,9 @@ static inline str_split_res_t string_split_at_char(string_t str, char ch) {
 }
 
 static inline bool string_eq(const string_t str1, const string_t str2) {
-    printf(
-        "s1: '%s'\ns2: '%s'\n",
-        string_to_cstr_malloc(str1),
-        string_to_cstr_malloc(str2)
-    );
-
     if (str1.len == str2.len) {
-        printf(
-            "len: %lu memcmp: %u\n",
-            str1.len,
-            memcmp(str1.ptr, str2.ptr, str1.len)
-        );
         return memcmp(str1.ptr, str2.ptr, str1.len) == 0;
     }
-    printf("len1: %lu len2: %lu\n", str1.len, str2.len);
     return false;
 }
 
@@ -164,11 +152,6 @@ static inline bool string_starts_with(
 }
 
 static inline bool string_ends_with(const string_t str, const string_t suffix) {
-    printf(
-        "substring: '%s'\n",
-        string_to_cstr_malloc(substring(str, str.len - suffix.len, str.len))
-    );
-
     if (suffix.len > str.len) {
         return false;
     }

@@ -46,8 +46,6 @@ symbol_range_t* trc_symbolicator_find_symbols_with_name(
     bool exact_match,
     size_t* symbol_count
 ) {
-    printf("trc_symbolicator_find_symbols_with_name\n");
-
     __block symbol_range_t* result_buffer = NULL;
     __block size_t capacity = 0;
     __block size_t index = 0;
@@ -59,25 +57,12 @@ symbol_range_t* trc_symbolicator_find_symbols_with_name(
             const string_t symbol_owner_name =
                 cstr_to_string(CSSymbolOwnerGetName(owner));
 
-            printf("symbol owner name: %s\n", symbol_owner_name.ptr);
-
-            printf(
-                "str '%s' %s with '%s'\n",
-                string_to_cstr_malloc(symbol_owner_name),
-                string_ends_with(symbol_owner_name, partial_symbol_owner_name)
-                    ? "ends"
-                    : "doesn't end",
-                string_to_cstr_malloc(partial_symbol_owner_name)
-            );
-
             if (string_ends_with(
                     symbol_owner_name, partial_symbol_owner_name
                 )) {
                 CSSymbolOwnerForeachSymbol(owner, ^(CSSymbolRef symbol) {
                     string_t current_symbol =
                         cstr_to_string(CSSymbolGetName(symbol));
-
-                    printf("current symbol: %s", current_symbol.ptr);
 
                     fflush(stdout);
 
@@ -99,14 +84,6 @@ symbol_range_t* trc_symbolicator_find_symbols_with_name(
                                 result_buffer, capacity * sizeof(symbol_range_t)
                             );
                         }
-
-                        printf("symbol name: %s\n", current_symbol.ptr);
-                        printf("symbol owner name: %s\n", symbol_owner_name.ptr);
-                        printf(
-                            "symbol range: %llx %lx\n",
-                            symbol_range.start,
-                            symbol_range.len
-                        );
 
                         result_buffer[index] = symbol_range;
                         index += 1;

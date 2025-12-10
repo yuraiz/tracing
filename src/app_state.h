@@ -1,3 +1,6 @@
+#ifndef TRC_APP_STATE
+#define TRC_APP_STATE
+
 #include <mach/mach_types.h>
 
 #include "breakpoint/breakpoint_controller.h"
@@ -13,3 +16,5 @@ typedef struct {
 bool init_app_state(app_state_t app_state);
 
 app_state_t* get_app_state(void);
+
+#endif  // TRC_APP_STATE

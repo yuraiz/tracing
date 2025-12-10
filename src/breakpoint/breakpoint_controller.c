@@ -28,7 +28,6 @@ static breakpoint_table_value_t read_value(
 
     const mach_vm_size_t requested_size = sizeof(value.data);
 
-    size_t size = 4;
     mach_vm_size_t outsize = 0;
 
     mach_vm_read_overwrite(

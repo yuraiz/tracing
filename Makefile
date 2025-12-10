@@ -12,10 +12,10 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 # compiler to use
 CC = clang
 CFLAGS := -std=c11 -Wall -Wextra -Wpedantic -Wconversion -Wdouble-promotion	\
-	-Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion \
+	-Wno-unused-parameter -Wno-unused-function -Wno-sign-conversion -Wno-flexible-array-extensions\
 	-g -fsanitize=undefined -fsanitize-trap -fsanitize=address			
 
-LINKFLAGS := -std=c11 -g -F /System/Library/PrivateFrameworks -framework CoreSymbolication -fsanitize=address
+LINKFLAGS := -std=c11 -g -F /System/Library/PrivateFrameworks -lreadline -framework CoreSymbolication -fsanitize=address
 
 PROGRAM_NAME := tracer
 

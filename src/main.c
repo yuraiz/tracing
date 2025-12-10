@@ -3,12 +3,17 @@
 #include <mach/mach.h>
 #include <mach/message.h>
 #include <mach/task.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/_types/_mach_port_t.h>
 #include <sys/_types/_null.h>
+#include <sys/_types/_pid_t.h>
 
+#include "app_state.h"
 #include "breakpoint/breakpoint_controller.h"
-#include "globals.h"
+#include "repl.h"
 #include "symbolication/symbolicator.h"
 #include "util/error.h"
 #include "util/mach_task.h"
@@ -20,11 +25,19 @@ extern boolean_t mach_exc_server(
     mach_msg_header_t* InHeadP, mach_msg_header_t* OutHeadP
 );
 
-int main(int argc, char** argv) {
-    kern_return_t status_code;
+typedef struct {
+    pid_t pid;
+    char* error_message;
+} parsed_args_t;
+
+parsed_args_t parse_args(int argc, char** argv) {
+    parsed_args_t result = {
+        .error_message = 0,
+    };
 
     if (argc != 2) {
-        error("Usage [progam] [pid]");
+        result.error_message = "Usage [progam] [pid]";
+        return result;
     }
 
     const int decimal_radix = 10;
@@ -32,42 +45,33 @@ int main(int argc, char** argv) {
     unsigned long pid_in = strtoul(argv[1], &end, decimal_radix);
 
     if (*end || end == argv[1] || pid_in > MAC_OS_MAX_PID) {
-        error("passed [pid] is not a number");
+        result.error_message = "passed [pid] is not a number";
+        return result;
     }
 
-    pid_t pid = (pid_t)pid_in;
+    result.pid = (pid_t)pid_in;
+    return result;
+}
+
+int main(int argc, char** argv) {
+    parsed_args_t args = parse_args(argc, argv);
+
+    if (args.error_message != 0) {
+        error(args.error_message);
+    }
+
+    kern_return_t status_code = 0;
 
     task_t task = 0;
-    status_code = task_for_pid(mach_task_self(), pid, &task);
+    status_code = task_for_pid(mach_task_self(), args.pid, &task);
     expect_ok(status_code, "failed to get port");
 
     symbolicator_t symbolicator = trc_symbolicator_new_with_task(task);
 
-    // const char* symbol_name =
-    //     "_$LT$T$u20$as$u20$wgpu..context..DynContext$GT$::queue_submit::"
-    //     "h495960884c2aca72";
+    breakpoint_controller_t breakpoint_controller =
+        trc_breakpoint_controller_new_with_task(task);
 
-    // trc_symbolicator_find_symbols_with_name(symbolicator, "", "", false,
-    // size_t *symbol_count)
-
-    trc_address_opt_t address_opt = trc_symbolicator_find_symbol(
-        symbolicator, "my_println", "simple_app", true, 0, true
-    );
-
-    expect_true(address_opt.is_present, "failed to get address");
-
-    printf(
-        "symbol: %s\n",
-        trc_symbolicator_symbol_at_address(
-            symbolicator, address_opt.address, NULL
-        )
-    );
-
-    BREAKPOINT_CONTROLLER = trc_breakpoint_controller_with_task_alloc(task);
-
-    trc_breakpoint_controller_set_breakpoint(
-        BREAKPOINT_CONTROLLER, address_opt.address
-    );
+    // Init exception handler
 
     mach_port_t exc_port = 0;
     trc_setup_exception_handler(task, &exc_port);
@@ -83,26 +87,21 @@ int main(int argc, char** argv) {
 
     trc_thread_enable_watch_point(threads[0]);
 
-    // trc_thread_enable_single_step(threads[0]);
+    // Init app state
 
-    status_code = task_resume(task);
-    expect_ok(status_code, "failed to resume");
+    const app_state_t app_state = {
+        .task = task,
+        .symbolicator = symbolicator,
+        .breakpoint_controller = breakpoint_controller,
+        .exc_port = exc_port,
+    };
 
-    printf("starting loop\n");
+    init_app_state(app_state);
 
-    const mach_msg_size_t msg_size = 2048;
+    // start_repl();
 
-    status_code = mach_msg_server_once(
-        mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
-    );
-    // status_code = mach_msg_server(
-    //     mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
-    // );
-    expect_ok(status_code, "mach_msg_server() returned on error!");
-
-    // trc_thread_disable_single_step(threads[0]);
-
-    // printf("Hello, world, pid = %i\n", pid);
-
-    printf("finished execution");
+    printf("START SIMULATING REPL\n");
+    const char* command_list[] = {"breakpoint my_println", "start", NULL};
+    simulate_repl(command_list);
+    printf("END SIMULATING REPL\n");
 }

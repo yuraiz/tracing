@@ -1,4 +1,6 @@
 .vscode
 target/
 test
+simple_app
 .DS_Store
+.cache

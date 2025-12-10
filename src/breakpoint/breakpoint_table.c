@@ -180,7 +180,7 @@ void trc_breakpoint_table_dump(breakpoint_table_t* table) {
     for (size_t i = 0; i < table->len; i++) {
         mach_vm_address_t address = table->addresss[i];
         breakpoint_table_value_t value = table->values[i];
-        printf("    address: 0x%" PRIXPTR "\n", address);
+        printf("    address: %p\n", (void*)address);
         printf("    value: ");
         const size_t byte_count = sizeof(value);
         for (size_t j = 0; j < byte_count; j++) {

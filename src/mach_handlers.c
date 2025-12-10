@@ -4,10 +4,8 @@
 #include <mach/mach_vm.h>
 #include <stdio.h>
 
+#include "app_state.h"
 #include "breakpoint/breakpoint_controller.h"
-#include "globals.h"
-#include "util/error.h"
-#include "util/mach_thread.h"
 #include "util/mach_thread_state.h"
 
 extern kern_return_t catch_mach_exception_raise(
@@ -29,7 +27,7 @@ extern kern_return_t catch_mach_exception_raise(
         trc_dump_arm_thread_state64(thread_state);
 
         trc_breakpoint_controller_disable_breakpoint(
-            BREAKPOINT_CONTROLLER, thread_state.__pc
+            &get_app_state()->breakpoint_controller, thread_state.__pc
         );
 
         char* data = malloc(256);

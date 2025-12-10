@@ -59,6 +59,11 @@ void trc_breakpoint_controller_disable_breakpoint(
     breakpoint_table_value_t value =
         trc_breakpoint_table_get(&controller->table, address);
     write_value(controller->task, address, value);
+
+    // Disable breakpoint while still on it
+    if (controller->temp_disabled == address) {
+        controller->temp_disabled = 0;
+    }
 }
 
 void trc_breakpoint_controller_remove_breakpoint(
@@ -67,4 +72,30 @@ void trc_breakpoint_controller_remove_breakpoint(
     breakpoint_table_value_t value =
         trc_breakpoint_table_remove(&controller->table, address);
     write_value(controller->task, address, value);
+}
+
+void trc_breakpoint_controller_on_hit(
+    breakpoint_controller_t* controller, mach_vm_address_t address
+) {
+    trc_breakpoint_controller_disable_breakpoint(controller, address);
+    controller->temp_disabled = address;
+}
+
+void trc_breakpoint_controller_after_hit(breakpoint_controller_t* controller) {
+    if (controller->temp_disabled) {
+        trc_breakpoint_controller_set_breakpoint(
+            controller, controller->temp_disabled
+        );
+        controller->temp_disabled = 0;
+    }
+}
+
+void trc_breakpoint_controller_disable_all(
+    breakpoint_controller_t* controller
+) {
+    for (size_t i = 0; i < controller->table.len; i++) {
+        mach_vm_address_t address = controller->table.addresses[i];
+        breakpoint_table_value_t value = controller->table.values[i];
+        write_value(controller->task, address, value);
+    }
 }

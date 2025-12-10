@@ -14,7 +14,7 @@ typedef struct {
 } breakpoint_table_value_t;
 
 typedef struct {
-    mach_vm_address_t* addresss;
+    mach_vm_address_t* addresses;
     breakpoint_table_value_t* values;
     size_t len;
     size_t capacity;
@@ -22,7 +22,7 @@ typedef struct {
 
 static inline breakpoint_table_t trc_breakpoint_table_new(void) {
     breakpoint_table_t result = {
-        .addresss = NULL,
+        .addresses = NULL,
         .values = NULL,
         .len = 0,
         .capacity = 0,

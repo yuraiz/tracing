@@ -3,6 +3,7 @@
 #include <mach/exc.h>
 #include <mach/mach.h>
 #include <mach/message.h>
+#include <mach/port.h>
 #include <mach/task.h>
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -131,6 +132,8 @@ cmd_t parse_command(__unused arena_t* arena, string_t string) {
 }
 
 static void cmd_resume(app_state_t* app_state) {
+    printf("cmd_resume\n");
+
     kern_return_t status_code = 0;
 
     task_t task = app_state->task;
@@ -146,8 +149,12 @@ static void cmd_resume(app_state_t* app_state) {
     status_code = mach_msg_server_once(
         mach_exc_server, msg_size, exc_port, MACH_MSG_TIMEOUT_NONE
     );
-
     expect_ok(status_code, "mach_msg_server() returned on error!");
+    status_code = task_suspend(task);
+
+    expect_ok(status_code, "failed to suspend");
+
+    trc_breakpoint_controller_after_hit(&app_state->breakpoint_controller);
 }
 
 void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
@@ -181,22 +188,20 @@ void exec_cmd(arena_t* arena, cmd_t cmd, app_state_t* app_state) {
     }
 }
 
-void start_repl(void) {
+void start_repl_bp(thread_t __unused thread) {
     using_history();
-    // History* hist = history_init();
-
-    // app_state_t* app_state = get_app_state();
-
-    // task_suspend(app_state->task);
 
     while (1) {
         arena_t* arena = arena_alloc();
 
-        char* input = readline("trc> ");
+        char* input = readline("trc bp> ");
 
         cmd_t cmd = parse_command(arena, cstr_to_string(input));
 
-        if (cmd.tag == CMD_TY_INVALID) {
+        if (cmd.tag == CMD_TY_START) {
+            add_history(input);
+            return;
+        } else if (cmd.tag == CMD_TY_INVALID) {
             printf("invalid tag\n");
         } else {
             add_history(input);
@@ -210,20 +215,9 @@ void start_repl(void) {
     }
 }
 
-void simulate_repl(const char** command_list) {
-    while (*command_list) {
-        const char* command = *command_list++;
-        arena_t* arena = arena_alloc();
-        cmd_t cmd = parse_command(arena, cstr_to_string(command));
-
-        printf("sim> %s\n", command);
-
-        if (cmd.tag == CMD_TY_INVALID) {
-            printf("invalid tag\n");
-        } else {
-            exec_cmd(arena, cmd, get_app_state());
-        }
-
-        arena_release(arena);
+void start_repl(void) {
+    start_repl_bp(MACH_PORT_NULL);
+    while (1) {
+        cmd_resume(get_app_state());
     }
 }

@@ -98,10 +98,5 @@ int main(int argc, char** argv) {
 
     init_app_state(app_state);
 
-    // start_repl();
-
-    printf("START SIMULATING REPL\n");
-    const char* command_list[] = {"breakpoint my_println", "start", NULL};
-    simulate_repl(command_list);
-    printf("END SIMULATING REPL\n");
+    start_repl();
 }

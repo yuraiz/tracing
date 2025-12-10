@@ -1,7 +1,6 @@
-#include <sys/_types/_mach_port_t.h>
+#include <mach/mach_types.h>
 
 #include "breakpoint/breakpoint_controller.h"
-#include "mach/task.h"
 #include "symbolication/symbolicator.h"
 
 typedef struct {

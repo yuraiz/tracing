@@ -36,7 +36,7 @@ parsed_args_t parse_args(int argc, char** argv) {
     };
 
     if (argc != 2) {
-        result.error_message = "Usage [progam] [pid]";
+        result.error_message = "Usage [program] [pid]";
         return result;
     }
 

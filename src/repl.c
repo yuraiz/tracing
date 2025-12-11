@@ -240,7 +240,7 @@ void start_repl_bp(thread_t thread) {
     while (1) {
         arena_t* arena = arena_alloc();
 
-        char* input = readline("trc bp> ");
+        char* input = readline("trc> ");
 
         cmd_t cmd = parse_command(arena, cstr_to_string(input));
 

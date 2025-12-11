@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Current arena implementation:
+// - Allocate new blocks on request using `malloc`.
+// - Push to the end of the existing block if the value fits.
+// - On release `free` all of the blocks.
+
 typedef struct arena_block_t arena_block_t;
 
 struct arena_block_t {

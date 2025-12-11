@@ -1,5 +1,7 @@
 # A nameless project for experimentation on debugging
 
+Currently only Apple Silicon Macs are supported.
+
 To build the binary run
 
 ```

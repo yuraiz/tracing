@@ -8,6 +8,15 @@
 
 #include "breakpoint_table.h"
 
+// High level api to control breakpoints
+//
+// To set a breakpoint the controller replaces the code at an address with `brk` instruction.
+// and saves the original bytes in the table.
+//
+// To disable the breakpoint it writes the saved code back to the address.
+//
+// To get an address from symbol name use the symbolicator api.
+
 typedef struct {
     breakpoint_table_t table;
     task_t task;
@@ -44,10 +53,13 @@ void trc_breakpoint_controller_remove_breakpoint(
     breakpoint_controller_t* controller, mach_vm_address_t address
 );
 
+// Called on a breakpoint hit to write the original code back to the memory,
+// so the task can execute past the instruction.
 void trc_breakpoint_controller_on_hit(
     breakpoint_controller_t* controller, mach_vm_address_t address
 );
 
+// Call this to restore the state of the breakpoint, that was disabled on hit.
 void trc_breakpoint_controller_after_hit(breakpoint_controller_t* controller);
 
 void trc_breakpoint_controller_disable_all(breakpoint_controller_t* controller);

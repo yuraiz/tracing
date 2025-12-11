@@ -8,11 +8,20 @@
 #include <stdlib.h>
 #include <sys/_types/_null.h>
 
+// A value for `breakpoint_table_t`.
+//
+// Stores the original instruction bytes, which is replaced with `brk` on breakpoint set.
 typedef struct {
     // TODO(yuraiz): 4 bytes on ARM64, 1 byte on x84_64
     uint8_t data[4];
 } breakpoint_table_value_t;
 
+// A "table" with addresses and the saved values.
+//
+// Used in the breakpoint controller, not intended to be used directly.
+//
+// Current implementation: "Structure of arrays" with addresses and values.
+// Value for the address is stored at the same index as the address.
 typedef struct {
     mach_vm_address_t* addresses;
     breakpoint_table_value_t* values;

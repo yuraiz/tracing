@@ -3,6 +3,8 @@
 
 #include <mach/mach_types.h>
 
+// Wrappers around the mach thread state api.
+
 // Get
 
 arm_thread_state64_t trc_thread_get_arm_thread_state64(thread_act_t thread);

@@ -73,11 +73,11 @@ static size_t arena_block_count(const arena_t* arena) {
     return result;
 }
 
-arena_t* arena_alloc(void) {
+static arena_t* arena_alloc(void) {
     return arena_alloc_with_block_size(DEFAULT_BLOCK_SIZE);
 }
 
-void arena_release(arena_t* arena) {
+static void arena_release(arena_t* arena) {
     arena_block_t* block = &arena->first_block;
     while (block->next != 0) {
         // The first block is in the same allocation as arena, so skip it here
@@ -87,7 +87,7 @@ void arena_release(arena_t* arena) {
     free(arena);
 }
 
-size_t arena_align(arena_t* arena, size_t align) {
+static size_t arena_align(arena_t* arena, size_t align) {
     size_t offset = arena->last_block_used % align;
     if (offset != 0) {
         size_t size_to_push = align - offset;
@@ -97,7 +97,7 @@ size_t arena_align(arena_t* arena, size_t align) {
     return 0;
 }
 
-void* arena_push(arena_t* arena, size_t size) {
+static void* arena_push(arena_t* arena, size_t size) {
     if (arena->last_block_used + size > arena->block_size) {
         arena_push_block(arena, size);
     }
@@ -107,20 +107,20 @@ void* arena_push(arena_t* arena, size_t size) {
     return result;
 }
 
-void* arena_push_zero(arena_t* arena, size_t size) {
+static void* arena_push_zero(arena_t* arena, size_t size) {
     void* result = arena_push(arena, size);
     memset(result, 0, size);
     return result;
 }
 
-void* arena_push_copy(arena_t* arena, void* src, size_t size) {
+static void* arena_push_copy(arena_t* arena, void* src, size_t size) {
     void* result = arena_push(arena, size);
     memcpy(result, src, size);
     return result;
 }
 
 // pop some bytes off the 'stack' - the way to free
-void arena_pop(arena_t* arena, size_t size) {
+static void arena_pop(arena_t* arena, size_t size) {
     if (size < arena->last_block_used) {
         arena->last_block_used -= size;
     } else {
@@ -129,7 +129,7 @@ void arena_pop(arena_t* arena, size_t size) {
 }
 
 // get the # of bytes currently allocated.
-size_t arena_get_pos(arena_t* arena) {
+static size_t arena_get_pos(arena_t* arena) {
     size_t count = arena_block_count(arena);
     return count - 1 + arena->last_block_used;
 }

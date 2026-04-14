@@ -14,12 +14,6 @@ const breakpoint_table_value_t BREAKPOINT_OPCODE = {
     .data = {0x00, 0x00, 0x20, 0xD4}
 };
 
-static void print_as_hex(uint8_t* data, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        printf("%02x", data[i]);
-    }
-}
-
 static breakpoint_table_value_t read_value(
     task_t task, mach_vm_address_t address
 ) {

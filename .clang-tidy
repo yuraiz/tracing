@@ -17,6 +17,10 @@ Checks: "*,
         -bugprone-suspicious-realloc-usage, # I want to fix that later,
         -cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers, # I just like magic numbers sometimes
 "
+Diagnostics:
+  ClangTidy:
+    Add: [-Werror=no-bugprone-suspicious-include]
+    Remove: [bugprone-suspicious-include]
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle:     none

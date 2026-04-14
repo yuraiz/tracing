@@ -13,6 +13,8 @@
 
 #include "../util/mach_thread_state.h"
 
+#define MAX_TOKEN_COUNT 10
+
 typedef enum {
     TRC_TOK_REG,
     TRC_TOK_INT,
@@ -188,13 +190,12 @@ typedef struct {
 } token_list_t;
 
 token_list_t parse_tokens(arena_t* arena, const string_t expr) {
-    const size_t TOK_MAX = 10;
-    token_t tok_buf[TOK_MAX] = {0};
+    token_t tok_buf[MAX_TOKEN_COUNT] = {0};
     size_t tok_count = 0;
 
     string_t rest = expr;
     token_parse_res_t parse_res;
-    while (rest.len > 0 && tok_count < TOK_MAX) {
+    while (rest.len > 0 && tok_count < MAX_TOKEN_COUNT) {
         parse_res = parse_next(arena, rest);
         if (parse_res.parsed && parse_res.token.token_type != TRC_TOK_SKIP) {
             tok_buf[tok_count++] = parse_res.token;

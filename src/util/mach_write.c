@@ -104,12 +104,6 @@ static void debug_task_protection(
     print_vm_prot(region_info->protection);
 }
 
-static void print_as_hex(uint8_t* data, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        printf("%02x", data[i]);
-    }
-}
-
 void trc_mach_write_to_protected(
     const task_t task,
     const mach_vm_address_t address,

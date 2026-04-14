@@ -1,23 +1,37 @@
-#include <mach/arm/kern_return.h>
-#include <mach/exc.h>
-#include <mach/mach.h>
-#include <mach/message.h>
-#include <mach/task.h>
-#include <readline/history.h>
-#include <readline/readline.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/_types/_mach_port_t.h>
-#include <sys/_types/_null.h>
-#include <sys/_types/_pid_t.h>
-
+// *.h
+#include "alloc/arena.h"
 #include "app_state.h"
 #include "breakpoint/breakpoint_controller.h"
+#include "breakpoint/breakpoint_table.h"
+#include "deps/CSTypeRef.h"
+#include "deps/CoreSymbolication.h"
+#include "eval/eval.h"
+#include "generated/mach_exc/mach_exc.h"
 #include "repl.h"
+#include "string/string.h"
 #include "symbolication/symbolicator.h"
+#include "util/debug_helpers.h"
 #include "util/error.h"
 #include "util/mach_task.h"
 #include "util/mach_thread.h"
+#include "util/mach_thread_state.h"
+#include "util/mach_write.h"
+
+// *.c
+#include "alloc/arena.c"
+#include "app_state.c"
+#include "breakpoint/breakpoint_controller.c"
+#include "breakpoint/breakpoint_table.c"
+#include "eval/eval.c"
+#include "generated/mach_exc/mach_excServer.c"
+#include "generated/mach_exc/mach_excUser.c"
+#include "mach_handlers.c"
+#include "repl.c"
+#include "symbolication/symbolicator.c"
+#include "util/mach_task.c"
+#include "util/mach_thread.c"
+#include "util/mach_thread_state.c"
+#include "util/mach_write.c"
 
 const int MAC_OS_MAX_PID = 99998;
 
@@ -100,3 +114,5 @@ int main(int argc, char** argv) {
 
     start_repl(threads[0]);
 }
+
+#include "util/error.c"

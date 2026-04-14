@@ -5,12 +5,12 @@ Currently only Apple Silicon Macs are supported.
 To build the binary run
 
 ```
-$ make
+$ ./build.sh
 ```
 
 The output will be located `target/tracer`
 
-You may want to compile 'simple_app.c' or 'code.s' to use as a debug target.
+You may want to use 'target/simple_app' or 'target/test' to use as a debug target.
 To attach to a target run
 
 ```

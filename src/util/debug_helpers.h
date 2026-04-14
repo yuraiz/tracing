@@ -1,3 +1,6 @@
+#ifndef TRC_DEBUG_HELPERS_H
+#define TRC_DEBUG_HELPERS_H
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,3 +25,11 @@ static inline void debug_task_mem(
     }
     printf("\n");
 }
+
+static void print_as_hex(uint8_t* data, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        printf("%02x", data[i]);
+    }
+}
+
+#endif  // TRC_DEBUG_HELPERS_H
